@@ -22,7 +22,7 @@ print(f"Using device: {device}")
 
 # Hyperparameters
 BATCH_SIZE = 512
-EPOCHS = 1000
+EPOCHS = 100
 LEARNING_RATE = 3e-4
 
 # Load preprocessed data
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 *model.vit.embeddings.parameters(),
             ]
             param_groups = [
-                dict(params=hidden_weights, use_muon=True, lr=100 * LEARNING_RATE),
+                dict(params=hidden_weights, use_muon=True, lr= 50 * LEARNING_RATE),
                 dict(
                     params=hidden_gains_biases + nonhidden_params,
                     use_muon=False,
