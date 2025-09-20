@@ -1,0 +1,18 @@
+[project]
+name = "muon-efficiency"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "datasets>=4.1.1",
+    "einops>=0.8.1",
+    "muon-optimizer",
+    "torch>=2.8.0",
+    "torchvision>=0.23.0",
+    "tqdm>=4.67.1",
+    "wandb>=0.22.0",
+]
+
+[tool.uv.sources]
+muon-optimizer = { git = "https://github.com/KellerJordan/Muon" }
