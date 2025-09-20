@@ -7,44 +7,26 @@ import argparse
 
 import torch
 from torch import optim
-from muon import MuonWithAuxAdam
-from torch.utils.data import DataLoader
-from torchvision import transforms
-from datasets import load_dataset
+from muon import SingleDeviceMuonWithAuxAdam
 from tqdm import tqdm
 
 import wandb
 from model import ViTForImageClassification, ViTConfig
+from dataset_utils import create_data_loaders
 
 # pylint: disable=invalid-name
 
 # Set device
-device = torch.device("mps" if torch.mps.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Hyperparameters
-BATCH_SIZE = 32
-EPOCHS = 25
+BATCH_SIZE = 512
+EPOCHS = 1000
 LEARNING_RATE = 3e-4
 
-# Data transforms
-transform = transforms.Compose(
-    [
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ]
-)
-
-ds = load_dataset("kmewhort/tu-berlin-png")
-transformed_ds = ds.with_transform(
-    lambda examples: {
-        "image": [transform(image.convert("RGB")) for image in examples["image"]],
-        "label": examples["label"],
-    }
-)
-train_loader = DataLoader(transformed_ds["train"], batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(transformed_ds["test"], batch_size=BATCH_SIZE)
+# Load preprocessed data
+train_loader, val_loader, num_classes = create_data_loaders(batch_size=BATCH_SIZE)
 
 config = ViTConfig(
     hidden_dropout_prob=0.1,
@@ -52,7 +34,7 @@ config = ViTConfig(
     intermediate_size=1024,
     num_attention_heads=8,
     num_hidden_layers=8,
-    num_labels=ds["train"].features["label"].num_classes,
+    num_labels=num_classes,
 )
 model = ViTForImageClassification(config).to(device)
 
@@ -93,7 +75,7 @@ if __name__ == "__main__":
                     lr=LEARNING_RATE,
                 ),
             ]
-            optimizer = MuonWithAuxAdam(param_groups)
+            optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
         case "adamw":
             optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
